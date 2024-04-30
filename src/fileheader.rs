@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Seek, SeekFrom};
-
 #[derive(Debug)]
 pub struct Fileheader {
     pub compressed: bool, // True for compressed, False for decompressed

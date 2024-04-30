@@ -1,10 +1,9 @@
 use crate::fileheader::Fileheader;
-use std::convert::TryInto;
 use std::env;
-use std::fs::{self, File};
+use std::fs::{File};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
-mod compression;
+//mod compression;
 mod decompression;
 mod fileheader;
 
@@ -27,33 +26,44 @@ fn main() -> io::Result<()> {
 
     // Read file header
     let header = Fileheader::read_from_file(&mut file)?;
+    println!("{:?}", header);
 
     // Check if the file is compressed and collect necessary data from the header
     let is_compressed = header.compressed;
     let header_end = header.header_end;
+    println!("Is it compressed:{:?}", is_compressed);
+    println!("Byte the header ends at:{:?}", header_end);
 
     // Get original file size
     let original_file_size = if is_compressed {
         header.original_size
     } else {
-        fs::metadata(input_path).len();
+        //Placeholder gets the actual file itselfs size for compression
+        0
+        //fs::metadata(input_path).len();
     };
+    println!("Files original size in bytes:{:?}", original_file_size);
 
     // Seek to the end of the header
     file.seek(SeekFrom::Start(header_end))?;
 
     // Prepare a vector to hold the data
-    let mut file_data = vec![0; original_file_size as usize]; //out of order, we need to get the actual datas length AFTER we've READ the data, the original_file_size is useless because the header is truncated here
+    let mut file_data = Vec::new();
+    file.read_to_end(&mut file_data)?;
+    //let file_data_as_nodes: Vec<Node> = file_data.iter().map(|&byte| Node::from(byte)).collect(); (compression attempts, likely wrong)
 
-    // Read the data from the file
-    file.read_exact(bytemuck::cast_slice_mut(&mut file_data))?;
+    // Read the data from the file (this is for compression and needs an if else so we only get this if we're compressing)
+    //file.read_exact(bytemuck::cast_slice_mut(&mut file_data))?;
 
     // Prepare output data
     let output_data = if is_compressed {
         // Decompress the data
         decompression::decompress(&file_data, header.original_size as usize)
     } else {
-        compression::compress(bytemuck::cast_slice(&file_data))
+        //compression::compress(&file_data_as_nodes)
+        // Placeholder for compression (returns an empty vector)
+        println!("Compression not currently supported");
+        Vec::new()
     };
 
     // Setup new header
@@ -70,12 +80,11 @@ fn main() -> io::Result<()> {
         new_header[0] = 0x24;
         new_header.truncate(new_header.len() - 4);
     } else {
-        println!("Compression not yet supported.");
-        // Compressing: Append original file size to the end of the header data (commented out as it's currently broken)
-        //let original_size_bytes = original_file_size.to_le_bytes();
-        //new_header.extend_from_slice(&original_size_bytes);
+        // Compressing: Append original file size to the end of the header data
+        let original_size_bytes = original_file_size.to_le_bytes();
+        new_header.extend_from_slice(&original_size_bytes);
         // Set the first byte as a marker for compressed data
-        //new_header[0] = 0xA4;
+        new_header[0] = 0xA4;
     }
 
     // Write the decompressed or compressed data to the output file
