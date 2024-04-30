@@ -1,0 +1,89 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Rust toolchain
+        uses: rust-lang/rust-toolchain@v2
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Install cross compilation tools (Linux/macOS)
+        if: runner.os != 'windows'
+        run: |
+          sudo apt update && sudo apt install -y gcc g++ libffi-dev openssl libssl-dev make
+
+      - name: Install cross compilation tools (Windows)
+        if: runner.os == 'windows'
+        run: |
+          choco install mingw
+
+      - run: rustup target add ${{ matrix.os }}-x86_64
+
+      - name: Build
+        run: |
+          cargo build --release --target ${{ matrix.os }}-x86_64
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }}-bin
+          path: target/${{ matrix.os }}-x86_64/release
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest  # Can be any OS
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Artifacts
+        run: |
+          for os in ubuntu-latest macos-latest windows-latest; do
+            curl -LJO "https://github.com/${{ github.repository }}/actions/artifacts/${{ github.run_id }}/downloads/${{ os }}-bin.zip"
+          done
+
+      - name: Create Release
+        uses: nlopes/release-action@v3
+        with:
+          tag_name: ${{ github.ref }}  # Use pushed tag name
+          release_name: "Release - ${{ github.sha }} (built on ${{ format('{:%Y-%m-%d}', github.event.time) }})"
+          body: |
+             binaries included:
+              - ubuntu-latest
+              - macos-latest
+              - windows-latest
+
+      - name: Extract Artifacts
+        run: |
+          for file in *.zip; do unzip "$file"; done
+
+      - name: Upload Linux Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-bin
+          path: ${{ runner.workspace }}/target/linux-x86_64/release
+
+      - name: Upload macOS Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-bin
+          path: ${{ runner.workspace }}/target/macos-x86_64/release
+
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-bin
+          path: ${{ runner.workspace }}/target/windows-x86_64/release
