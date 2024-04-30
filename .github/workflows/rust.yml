@@ -18,23 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose --release
-
-  build-windows:
-
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose --release
-
-  build-macos:
-
-    runs-on: macos-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: update
-      run: rustup update stable
-    - name: Build
-      run: cargo build --verbose --release
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Upload
+        path: target/release/lba2sd
