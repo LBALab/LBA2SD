@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build (Linux)
-      run: cargo build --release
+      run: cargo build --release --verbose
 
   build-macos:
     runs-on: macos-latest
@@ -19,14 +19,14 @@ jobs:
     - name: Update Rust (macOS)
       run: rustup update stable
     - name: Build (macOS)
-      run: cargo build --release
+      run: cargo build --release --verbose
 
   build-windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     - name: Build (Windows)
-      run: cargo build --release
+      run: cargo build --release --verbose
 
   upload-artifacts:
     needs: [build-linux, build-macos, build-windows]
