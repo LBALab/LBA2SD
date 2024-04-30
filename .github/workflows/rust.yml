@@ -63,7 +63,3 @@ jobs:
         for os in ubuntu-latest macos-latest windows-latest; do
           curl -LJO "https://github.com/${{ github.repository }}/actions/artifacts/${{ github.run_id }}/downloads/${os}-bin.zip"
         done
-
-    - name: Extract Artifacts
-      run: |
-        for file in *.zip; do unzip "$file"; done
