@@ -14,21 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install cross compilation tools (Linux/macOS)
-        if: runner.os != 'windows'
-        run: |
-          sudo apt update && sudo apt install -y gcc g++ libffi-dev openssl libssl-dev make
-
-      - name: Install cross compilation tools (Windows)
-        if: runner.os == 'windows'
-        run: |
-          choco install mingw
-
-      - run: rustup target add ${{ matrix.os }}-x86_64
-
       - name: Build
         run: |
-          cargo build --release --target ${{ matrix.os }}-x86_64
+          if [[ runner.os == 'Linux' ]]; then
+            cargo build --release
+          elif [[ runner.os == 'macos' ]]; then
+            cargo build --release --target x86_64-apple-darwin
+          elif [[ runner.os == 'windows' ]]; then
+            cargo build --release --target x86_64-pc-windows-gnu
+          fi
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v3
