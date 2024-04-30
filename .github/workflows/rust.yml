@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build (Linux)
+      run: cargo build --release
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build (macOS)
+      run: cargo build --release --target x86_64-apple-darwin
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    # Specific Windows build steps if needed (e.g., setting environment variables)
+    - name: Build (Windows)
+      run: cargo build --release --target x86_64-pc-windows-gnu
+
+  upload-artifacts:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest  # Can be any OS
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Upload Linux Binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-bin
+        path: target/linux-x86_64/release
+
+    - name: Upload macOS Binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: macos-bin
+        path: target/macos-x86_64/release
+
+    - name: Upload Windows Binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-bin
+        path: target/windows-x86_64/release
+
+  release:
+    needs: upload-artifacts
+    runs-on: ubuntu-latest  # Can be any OS
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download Artifacts
+      run: |
+        for os in ubuntu-latest macos-latest windows-latest; do
+          curl -LJO "https://github.com/${{ github.repository }}/actions/artifacts/${{ github.run_id }}/downloads/${os}-bin.zip"
+        done
+
+    - name: Create Release
+      uses: nlopes/release-action@v2
+      with:
+        tag_name: ${{ github.ref }}  # Use pushed tag name
+        release_name: "LBA2SD-$(date +%Y.%m.%d) (built on ${{ format('{:%Y-%m-%d}', github.event.time) }})"
+        body: |
+          Binaries included:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    - name: Extract Artifacts
+      run: |
+        for file in *.zip; do unzip "$file"; done
