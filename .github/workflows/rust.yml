@@ -21,7 +21,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: Linux
-        path: target/release/lba2sd
+        path: target/release/*
         compression-level: 0
   build-windows:
 
@@ -34,7 +34,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: Windows
-        path: target/release/lba2sd.exe
+        path: target/release/*
         compression-level: 0
 
   build-macos:
@@ -50,5 +50,5 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: MacOS
-        path: target/release/lba2sd.app
+        path: target/release/*
         compression-level: 0
