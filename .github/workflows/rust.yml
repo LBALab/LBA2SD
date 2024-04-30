@@ -52,7 +52,7 @@ jobs:
       - name: Download Artifacts
         run: |
           for os in ubuntu-latest macos-latest windows-latest; do
-            curl -LJO "https://github.com/${{ github.repository }}/actions/artifacts/${{ github.run_id }}/downloads/${{ os }}-bin.zip"
+            curl -LJO "https://github.com/${{ github.repository }}/actions/artifacts/${{ github.run_id }}/downloads/${os}-bin.zip"
           done
 
       - name: Create Release
