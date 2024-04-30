@@ -25,7 +25,7 @@ jobs:
       run: cargo build --release --verbose
     - name: Verify Build Output (Optional)
       run: |
-        ls /home/runner/work/LBA2SD/LBA2SD/target/release  # Adjust path based on logs
+        ls /Users/runner/work/LBA2SD/LBA2SD/target/release
 
   build-windows:
     runs-on: windows-latest
@@ -35,7 +35,7 @@ jobs:
       run: cargo build --release --verbose
     - name: Verify Build Output (Optional)
       run: |
-        ls /home/runner/work/LBA2SD/LBA2SD/target/release
+        dir /home/runner/work/LBA2SD/LBA2SD/target/release
 
   upload-artifacts:
     needs: [build-linux, build-macos, build-windows]
@@ -47,19 +47,19 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: linux-bin
-        path: LBA2SD/LBA2SD/target/release
+        path: /target/release/
 
     - name: Upload macOS Binary
       uses: actions/upload-artifact@v3
       with:
         name: macos-bin
-        path: LBA2SD/LBA2SD/target/release
+        path: /target/release/
 
     - name: Upload Windows Binary
       uses: actions/upload-artifact@v3
       with:
         name: windows-bin
-        path: LBA2SD/LBA2SD/target/release
+        path: \target\release\
 
   download-artifacts:  # New job to download artifacts
     needs: upload-artifacts
