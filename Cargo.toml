@@ -1,0 +1,23 @@
+[package]
+name = "lba2sd"
+version = "1.0.0"
+authors = ["Melechtna Antelecht <Melechtna@gmail.com>"]
+
+[dependencies]
+clap = "4.5.4"
+bytemuck = "1.15.0"
+
+[[bin]]
+name = "lba2sd"
+path = "src/main.rs"
+
+[profile.release]
+target = "x86_64-unknown-linux-gnu"
+
+[profile.release-x86_64-windows-gnu]
+target = "x86_64-pc-windows-gnu"
+inherits = "release"
+
+[profile.release-apple-darwin]
+target = "x86_64-apple-darwin"
+inherits = "release"
