@@ -38,19 +38,19 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: linux-bin
-        path: target/linux-x86_64/release
+        path: target/release
 
     - name: Upload macOS Binary
       uses: actions/upload-artifact@v3
       with:
         name: macos-bin
-        path: target/macos-x86_64/release
+        path: target/release
 
     - name: Upload Windows Binary
       uses: actions/upload-artifact@v3
       with:
         name: windows-bin
-        path: target/windows-x86_64/release
+        path: target/release
 
   download-artifacts:  # New job to download artifacts
     needs: upload-artifacts
