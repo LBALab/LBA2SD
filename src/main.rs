@@ -3,7 +3,7 @@ use std::env;
 use std::fs::{File};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
-//mod compression;
+mod compression;
 mod decompression;
 mod fileheader;
 
@@ -31,18 +31,18 @@ fn main() -> io::Result<()> {
     // Check if the file is compressed and collect necessary data from the header
     let is_compressed = header.compressed;
     let header_end = header.header_end;
-    println!("Is it compressed:{:?}", is_compressed);
-    println!("Byte the header ends at:{:?}", header_end);
+    println!("Is it compressed: {:?}", is_compressed);
+    println!("Byte the header ends at: {:?}", header_end);
 
     // Get original file size
     let original_file_size = if is_compressed {
         header.original_size
     } else {
-        //Placeholder gets the actual file itselfs size for compression
-        0
-        //fs::metadata(input_path).len();
+        // If the file is decompressed, get the size from the file system
+        let metadata = file.metadata()?;
+        metadata.len() as u32
     };
-    println!("Files original size in bytes:{:?}", original_file_size);
+    println!("File's original size in bytes: {:?}", original_file_size);
 
     // Seek to the end of the header
     file.seek(SeekFrom::Start(header_end))?;
@@ -50,20 +50,14 @@ fn main() -> io::Result<()> {
     // Prepare a vector to hold the data
     let mut file_data = Vec::new();
     file.read_to_end(&mut file_data)?;
-    //let file_data_as_nodes: Vec<Node> = file_data.iter().map(|&byte| Node::from(byte)).collect(); (compression attempts, likely wrong)
-
-    // Read the data from the file (this is for compression and needs an if else so we only get this if we're compressing)
-    //file.read_exact(bytemuck::cast_slice_mut(&mut file_data))?;
 
     // Prepare output data
     let output_data = if is_compressed {
         // Decompress the data
         decompression::decompress(&file_data, header.original_size as usize)
     } else {
-        //compression::compress(&file_data_as_nodes)
-        // Placeholder for compression (returns an empty vector)
-        println!("Compression not currently supported");
-        Vec::new()
+        // Compress the data
+        compression::compress(&file_data)
     };
 
     // Setup new header
@@ -76,7 +70,7 @@ fn main() -> io::Result<()> {
     file_cursor.read_to_end(&mut new_header)?;
 
     if is_compressed {
-        // Decompressing: Set the first byte to 24 and remove the last 4 bytes from the header data
+        // Decompressing: Set the first byte to 0x24 and remove the last 4 bytes from the header data
         new_header[0] = 0x24;
         new_header.truncate(new_header.len() - 4);
     } else {
